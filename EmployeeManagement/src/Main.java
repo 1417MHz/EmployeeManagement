@@ -8,14 +8,14 @@ import javax.swing.table.*;
 // 사원 관리 프로그램
 public class Main extends JFrame {
 	private JButton btnInsert, btnDelete, btnUpdate, btnLeave, btnSelect, btnSearch, btnClear;
-	private JTextField tfId, tfName, tfAge, tfAddress, tfDept, tfSalary, tfJoindate, tfSearch;
+	private JTextField tfId, tfName, tfAge, tfAddress, tfDept, tfPosition, tfSalary, tfJoindate, tfSearch;
 	private JRadioButton rbId, rbName, rbDept;
 	Connection conn;
 	PreparedStatement pstmt; /* Statement 대신 PreparedStatement를 사용하여 성능을 개선함 */
 	ResultSet rs;
 	
 	// 결과 출력 화면용 JTable
-	String header[] = {"ID", "이름", "나이", "주소", "부서", "연봉", "입사일", "퇴사일"};
+	String header[] = {"ID", "이름", "나이", "주소", "부서", "직위", "연봉", "입사일", "퇴사일"};
 	
 	// JTable 셀 수정 불가능 하도록 설정
 	DefaultTableModel model = new DefaultTableModel(header, 0) {
@@ -79,16 +79,17 @@ public class Main extends JFrame {
 				// (JDBC 사용을 최소화 하기 위해 사용)
 				if (e.getClickCount() == 2) {
 					int selectedRow = empTable.getSelectedRow();
-					Object rowValue[] = new Object[7];
-					for(int i=0; i<7; i++) 
+					Object rowValue[] = new Object[8];
+					for(int i=0; i<8; i++) 
 						rowValue[i] = empTable.getValueAt(selectedRow, i);
 					tfId.setText(rowValue[0].toString());
 					tfName.setText(rowValue[1].toString());
 					tfAge.setText(rowValue[2].toString());
 					tfAddress.setText(rowValue[3].toString());
 					tfDept.setText(rowValue[4].toString());
-					tfSalary.setText(rowValue[5].toString());
-					tfJoindate.setText(rowValue[6].toString());
+					tfPosition.setText(rowValue[5].toString());
+					tfSalary.setText(rowValue[6].toString());
+					tfJoindate.setText(rowValue[7].toString());
 				}
 				
 			}
@@ -110,7 +111,7 @@ public class Main extends JFrame {
 		setResizable(false);
 		
 		// 창 크기 설정
-		setSize(850, 410);
+		setSize(900, 410);
 		setVisible(true);
 	}
 	
@@ -124,12 +125,12 @@ public class Main extends JFrame {
 		// 데이터 입력 부분 & 버튼 부분을 위한 왼쪽 JPanel
 		JPanel pLeft = new JPanel();
 		pLeft.setLayout(new BorderLayout());
-		pLeft.setBorder(BorderFactory.createEmptyBorder(50, 5, 0, 5));
+		pLeft.setBorder(BorderFactory.createEmptyBorder(40, 5, 0, 5));
 		
 		// pLeft의 하위 패널 plNorth
 		// 데이터 입력 부분 JPanel
 		JPanel plNorth = new JPanel();
-		plNorth.setLayout(new GridLayout(7, 2, 5, 5));
+		plNorth.setLayout(new GridLayout(8, 2, 5, 5));
 		plNorth.setBorder(BorderFactory.createEmptyBorder(0, 5, 10, 5));
 		
 		plNorth.add(new JLabel("사원번호"));
@@ -151,6 +152,10 @@ public class Main extends JFrame {
 		plNorth.add(new JLabel("부서"));
 		tfDept = new JTextField();
 		plNorth.add(tfDept);
+		
+		plNorth.add(new JLabel("직위"));
+		tfPosition = new JTextField();
+		plNorth.add(tfPosition);
 		
 		plNorth.add(new JLabel("연봉"));
 		tfSalary = new JTextField();
@@ -237,7 +242,7 @@ public class Main extends JFrame {
 		empTable.getColumn("이름").setPreferredWidth(60);
 		empTable.getColumn("나이").setPreferredWidth(40);
 		empTable.getColumn("주소").setPreferredWidth(120);
-		empTable.getColumn("연봉").setPreferredWidth(40);
+		empTable.getColumn("연봉").setPreferredWidth(50);
 		
 		// JTable Column 이동, 크기조절 불가
 		empTable.getTableHeader().setReorderingAllowed(false);
@@ -266,11 +271,12 @@ public class Main extends JFrame {
 			String age = tfAge.getText().toString();
 			String address = tfAddress.getText().toString();
 			String dept = tfDept.getText().toString();
+			String position = tfPosition.getText().toString();
 			String salary = tfSalary.getText().toString();
 			String joindate = tfJoindate.getText().toString();
 			
 			// 데이터 삽입 SQL문 실행
-			String insertSQL = "insert into emp values(?, ?, ?, ?, ?, ?, ?, NULL);";
+			String insertSQL = "insert into emp values(?, ?, ?, ?, ?, ?, ?, ?, NULL);";
 			pstmt = conn.prepareStatement(insertSQL);
 			// SQL)) id, age, salary는 int 자료형이지만 varchar 자료형과 같은 따옴표 '' 방식으로 입력될 수 있음
 			pstmt.setString(1, id);
@@ -278,8 +284,9 @@ public class Main extends JFrame {
 			pstmt.setString(3, age);
 			pstmt.setString(4, address);
 			pstmt.setString(5, dept);
-			pstmt.setString(6, salary);
-			pstmt.setString(7, joindate);
+			pstmt.setString(6, position);
+			pstmt.setString(7, salary);
+			pstmt.setString(8, joindate);
 			pstmt.executeUpdate();
 			
 			System.out.println("ID: " + id + " 이름: " + name + " - 입력 완료\n");
@@ -287,10 +294,7 @@ public class Main extends JFrame {
 			// 데이터 삽입 완료 후 JTextField 초기화
 			tfClear();
 			
-			pstmt.close();
-			conn.close();
-			dbSelect();
-			
+			pstmt.close(); conn.close();
 		} catch (Exception e) {
 			System.err.println("- 입력 에러 발생 -");
 			e.printStackTrace();
@@ -304,7 +308,7 @@ public class Main extends JFrame {
 			
 			// DB에서 가져올 데이터 속성을 저장할 변수
 			var name = ""; var age = ""; var address = ""; var dept = ""; 
-			var salary  = ""; var joindate = "";
+			var position = ""; var salary  = ""; var joindate = "";
 			
 			// TextField에 입력된 정보 저장
 			var in_id = tfId.getText().toString();
@@ -312,6 +316,7 @@ public class Main extends JFrame {
 			var in_age = tfAge.getText().toString();
 			var in_address = tfAddress.getText().toString();
 			var in_dept = tfDept.getText().toString();
+			var in_position = tfPosition.getText().toString();
 			var in_salary = tfSalary.getText().toString();
 			var in_joindate = tfJoindate.getText().toString();
 			
@@ -326,6 +331,7 @@ public class Main extends JFrame {
 				age = rs.getString("age");
 				address = rs.getString("address");
 				dept = rs.getString("dept");
+				position = rs.getString("position");
 				salary  = rs.getString("salary");
 				joindate = rs.getString("joindate");
 			}
@@ -344,18 +350,20 @@ public class Main extends JFrame {
 			if(!in_age.equals(age) && in_age.length() != 0) age = in_age;
 			if(!in_address.equals(address) && in_address.length() != 0) address = in_address;
 			if(!in_dept.equals(dept) && in_dept.length() != 0) dept = in_dept;
+			if(!in_position.equals(position) && in_position.length() != 0) position = in_position;
 			if(!in_salary.equals(salary) && in_salary.length() != 0) salary = in_salary;
 			if(!in_joindate.equals(joindate) && in_joindate.length() != 0) joindate = in_joindate;
 			
-			String updateSQL = "update emp set name = ?, age = ?, address = ?, dept = ?, salary = ?, joindate = ? where empid = ?;";
+			String updateSQL = "update emp set name = ?, age = ?, address = ?, dept = ?, position = ?, salary = ?, joindate = ? where empid = ?;";
 			pstmt = conn.prepareStatement(updateSQL);
 			pstmt.setString(1, name);
 			pstmt.setString(2, age);
 			pstmt.setString(3, address);
 			pstmt.setString(4, dept);
-			pstmt.setString(5, salary);
-			pstmt.setString(6, joindate);
-			pstmt.setString(7, in_id);
+			pstmt.setString(5, position);
+			pstmt.setString(6, salary);
+			pstmt.setString(7, joindate);
+			pstmt.setString(8, in_id);
 			pstmt.executeUpdate();
 			
 			System.out.println("ID: " + in_id + " - 수정 완료\n");
@@ -363,10 +371,7 @@ public class Main extends JFrame {
 			// 데이터 수정 완료 후 JTextField 초기화
 			tfClear();
 			
-			rs.close();
-			pstmt.close();
-			conn.close();
-			dbSelect();
+			rs.close(); pstmt.close(); conn.close();
 		} catch (Exception e) {
 			System.err.println("- 수정 에러 발생 -");
 			e.printStackTrace();
@@ -391,9 +396,7 @@ public class Main extends JFrame {
 			// 퇴사처리 완료 후 JTextField 초기화
 			tfClear();
 			
-			pstmt.close();
-			conn.close();
-			dbSelect();
+			pstmt.close(); conn.close();
 		} catch(Exception e) {
 			System.err.println("- 퇴사처리 에러 발생 -");
 			e.printStackTrace();
@@ -419,9 +422,7 @@ public class Main extends JFrame {
 			// 데이터 삭제 완료 후 JTextField 초기화
 			tfClear();
 			
-			pstmt.close();
-			conn.close();
-			dbSelect();
+			pstmt.close(); conn.close();
 		} catch (Exception e) {
 			System.err.println("- 삭제 에러 발생 -");
 			e.printStackTrace();
@@ -438,7 +439,7 @@ public class Main extends JFrame {
 			conn = DBConn.dbConnection();
 			
 			// empid를 세자릿수로 표사하기 위해 LPAD()이용
-			String selectSQL = "select LPAD(empid, 3, '0') as empid, name, age, address, dept, salary, joindate, leavedate from emp;";
+			String selectSQL = "select LPAD(empid, 3, '0') as empid, name, age, address, dept, position, salary, joindate, leavedate from emp;";
 			pstmt = conn.prepareStatement(selectSQL);
 			
 			// ResultSet를 통해 데이터 읽어옴
@@ -451,20 +452,19 @@ public class Main extends JFrame {
 				var age = rs.getString("age");
 				var address = rs.getString("address");
 				var dept = rs.getString("dept");
+				var position = rs.getString("position");
 				var salary  = rs.getString("salary");
 				var joindate = rs.getString("joindate");
 				var leavedate = rs.getString("leavedate");
 				
-				Object data[] = {id, name, age, address, dept, salary, joindate, leavedate};
+				Object data[] = {id, name, age, address, dept, position, salary, joindate, leavedate};
 				// 한 행 씩 테이블에 데이터 삽입
 				model.addRow(data);
 			}
 			
 			System.out.println("전체 조회 완료");
 			
-			rs.close();
-			pstmt.close();
-			conn.close();
+			rs.close(); pstmt.close(); conn.close();
 		} catch (Exception e) {
 			System.err.println("- 전체 조회 에러 발생 -");
 			e.printStackTrace();
@@ -486,11 +486,11 @@ public class Main extends JFrame {
 			// 어느 JRadioButton이 선택 되어있는지에 따라 다르게 조회
 			// SQL)) empid를 세자릿수로 표사하기 위해 LPAD()이용
 			if(rbId.isSelected()) {
-				searchSQL = "select LPAD(empid, 3, '0') as empid, name, age, address, dept, salary, joindate, leavedate from emp where empid like '" + "%" + searchText + "%" + "';";
+				searchSQL = "select LPAD(empid, 3, '0') as empid, name, age, address, dept, position, salary, joindate, leavedate from emp where empid like '" + "%" + searchText + "%" + "';";
 			} else if(rbName.isSelected()) {
-				searchSQL = "select LPAD(empid, 3, '0') as empid, name, age, address, dept, salary, joindate, leavedate from emp where name like '" + "%" + searchText + "%" + "';";
+				searchSQL = "select LPAD(empid, 3, '0') as empid, name, age, address, dept, position, salary, joindate, leavedate from emp where name like '" + "%" + searchText + "%" + "';";
 			} else if(rbDept.isSelected()) {
-				searchSQL = "select LPAD(empid, 3, '0') as empid, name, age, address, dept, salary, joindate, leavedate from emp where dept like '" + "%" + searchText + "%" + "';";
+				searchSQL = "select LPAD(empid, 3, '0') as empid, name, age, address, dept, position, salary, joindate, leavedate from emp where dept like '" + "%" + searchText + "%" + "';";
 			}
 			
 			pstmt = conn.prepareStatement(searchSQL);
@@ -504,19 +504,19 @@ public class Main extends JFrame {
 				var age = rs.getString("age");
 				var address = rs.getString("address");
 				var dept = rs.getString("dept");
+				var position = rs.getString("position");
 				var salary  = rs.getString("salary");
 				var joindate = rs.getString("joindate");
 				var leavedate = rs.getString("leavedate");
 							
-				Object data[] = {id, name, age, address, dept, salary, joindate, leavedate};
+				Object data[] = {id, name, age, address, dept, position, salary, joindate, leavedate};
 				// 한 행 씩 테이블에 데이터 삽입
 				model.addRow(data);
 			}
 			
 			System.out.println("조건 조회 완료");
-			rs.close();
-			pstmt.close();
-			conn.close();
+			
+			rs.close(); pstmt.close(); conn.close();
 		} catch (Exception e) {
 			System.err.println("- 조건 조회 에러 발생 -");
 			e.printStackTrace();
@@ -530,8 +530,11 @@ public class Main extends JFrame {
 		tfAge.setText("");
 		tfAddress.setText("");
 		tfDept.setText("");
+		tfPosition.setText("");
 		tfSalary.setText("");
 		tfJoindate.setText("");
+		tfSearch.setText("");
+		dbSelect();
 	}
 	
 	public static void main(String[] args) {
