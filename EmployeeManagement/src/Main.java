@@ -11,9 +11,8 @@ public class Main extends JFrame {
 	private JTextField tfId, tfName, tfAge, tfAddress, tfDept, tfSalary, tfJoindate, tfSearch;
 	private JRadioButton rbId, rbName, rbDept;
 	Connection conn;
-//	Statement stmt;
-	PreparedStatement pstmt; /* PreparedStatement를 사용하여 SQL문 입력시 문법 오류를 없애고, 성능을 개선함 */
-	ResultSet rs = null;
+	PreparedStatement pstmt; /* Statement 대신 PreparedStatement를 사용하여 성능을 개선함 */
+	ResultSet rs;
 	
 	// 결과 출력 화면용 JTable
 	String header[] = {"ID", "이름", "나이", "주소", "부서", "연봉", "입사일", "퇴사일"};
@@ -51,8 +50,11 @@ public class Main extends JFrame {
 //					var selectedRow = empTable.getValueAt(empTable.getSelectedRow(), 0);
 //					try {
 //						conn = DBConn.dbConnection();
-//						stmt = conn.createStatement();
-//						rs = stmt.executeQuery("select * from emp where empid ='" + selectedRow + "';");
+//						// stmt = conn.createStatement();
+//						String selectSQL = "select * from emp where empid = ?";
+//						pstmt = conn.prepareStatement(selectSQL);
+//						pstmt.setString(1, selectedRow);
+//						rs = pstmt.executeQuery();
 //						
 //						while(rs.next()) {
 //							tfId.setText(rs.getString("empid"));
@@ -63,7 +65,9 @@ public class Main extends JFrame {
 //							tfSalary.setText(rs.getString("salary"));
 //							tfJoindate.setText(rs.getString("joindate"));
 //						}
-//						stmt.close(); conn.close();
+//						// stmt.close();
+//						conn.close(); 
+//						pstmt.close();
 //						
 //					} catch(Exception ex) {
 //						ex.printStackTrace();
@@ -76,7 +80,6 @@ public class Main extends JFrame {
 				if (e.getClickCount() == 2) {
 					int selectedRow = empTable.getSelectedRow();
 					Object rowValue[] = new Object[7];
-					Object tfNames[] = {tfId, tfName, tfAge, tfAddress, tfDept, tfSalary, tfJoindate};
 					for(int i=0; i<7; i++) 
 						rowValue[i] = empTable.getValueAt(selectedRow, i);
 					tfId.setText(rowValue[0].toString());
@@ -92,41 +95,13 @@ public class Main extends JFrame {
 		});
 		
 		// 버튼 이벤트 처리 - 액션 이벤트 리스너 (익명 클래스)
-		btnInsert.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				dbInsert();
-			}
-		});
-		btnUpdate.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				dbUpdate();
-			}
-		});
-		btnLeave.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				dbLeave();
-			}
-		});
-		btnDelete.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				dbDelete();
-			}
-		});
-		btnSelect.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				dbSelect();
-			}
-		});
-		btnClear.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				tfClear();
-			}
-		});
-		btnSearch.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				dbSearch();
-			}
-		}); /* - 버튼 이벤트 처리 끝 - */
+		btnInsert.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent e) { dbInsert(); }});
+		btnUpdate.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent e) { dbUpdate(); }});
+		btnLeave.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent e)  { dbLeave(); }});
+		btnDelete.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent e) { dbDelete(); }});
+		btnSelect.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent e) { dbSelect(); }});
+		btnClear.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent e)  { tfClear(); }});
+		btnSearch.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent e) { dbSearch(); }}); 
 		
 		// 초기 실행시 모든 데이터 조회
 		dbSelect();
@@ -284,7 +259,6 @@ public class Main extends JFrame {
 	public void dbInsert() {
 		try {
 			conn = DBConn.dbConnection();
-			// stmt = conn.createStatement();
 			
 			// 데이터를 입력받는 JTextField로부터 입력을 희망하는 데이터를 가져와 변수에 대입
 			String id = tfId.getText().toString();
@@ -308,23 +282,18 @@ public class Main extends JFrame {
 			pstmt.setString(7, joindate);
 			pstmt.executeUpdate();
 			
-//			stmt.executeUpdate("insert into emp values(" + id + ", '" + name + "', " + age + 
-//					", '" + address + "', '" + dept + "', " + salary + ", '" + joindate + "', null);");
 			System.out.println("ID: " + id + " 이름: " + name + " - 입력 완료\n");
-			
 			
 			// 데이터 삽입 완료 후 JTextField 초기화
 			tfClear();
 			
-//			stmt.close(); 
 			pstmt.close();
 			conn.close();
 			dbSelect();
 			
 		} catch (Exception e) {
-			// e.printStackTrace();
-			System.out.println("이미 등록된 사원번호 입니다.");
 			System.err.println("- 입력 에러 발생 -");
+			e.printStackTrace();
 		}
 	}
 	
@@ -332,7 +301,6 @@ public class Main extends JFrame {
 	public void dbUpdate() {
 		try {
 			conn = DBConn.dbConnection();
-//			stmt = conn.createStatement();
 			
 			// DB에서 가져올 데이터 속성을 저장할 변수
 			var name = ""; var age = ""; var address = ""; var dept = ""; 
@@ -350,8 +318,8 @@ public class Main extends JFrame {
 			String selectSQL = "select * from emp where empid = ?";
 			pstmt = conn.prepareStatement(selectSQL);
 			pstmt.setString(1, in_id);
+			// ResultSet를 통해 데이터 읽어옴
 			rs = pstmt.executeQuery();
-//			rs = stmt.executeQuery("select * from emp where empid = '" + in_id + "';");
 			
 			while(rs.next()) {
 				name = rs.getString("name");
@@ -363,7 +331,7 @@ public class Main extends JFrame {
 			}
 			
 			// 사용자가 JTextField에 입력한 정보가 있는지 체크 후 입력한 정보가 있다면 기존 데이터에 덮어쓰기 후 update 실행
-			// JTable 이벤트 처리를 통해 덮어쓰기 방식으로 데이터를 수정하므로 그닥 쓸모 없음
+			// JTable 이벤트 처리를 통해 덮어쓰기 방식으로 데이터를 수정하므로 이 방식은 효율적이지 못함
 //			if(in_name.length() > 0) name = in_name; 
 //			if(in_age.length() > 0) age = in_age;
 //			if(in_address.length() > 0) address = in_address;
@@ -390,23 +358,18 @@ public class Main extends JFrame {
 			pstmt.setString(7, in_id);
 			pstmt.executeUpdate();
 			
-//			stmt.executeUpdate("update emp set name = '" + name + "', age = " + age + ", address = '" + 
-//					address + "', dept = '" + dept + "', salary = " + salary + ", joindate = '" + 
-//					joindate + "' where empid = " + in_id + ";");
-			
 			System.out.println("ID: " + in_id + " - 수정 완료\n");
 			
 			// 데이터 수정 완료 후 JTextField 초기화
 			tfClear();
 			
-//			stmt.close(); 
 			rs.close();
 			pstmt.close();
 			conn.close();
 			dbSelect();
 		} catch (Exception e) {
-			// e.printStackTrace();
 			System.err.println("- 수정 에러 발생 -");
+			e.printStackTrace();
 		}
 	}
 	
@@ -414,7 +377,6 @@ public class Main extends JFrame {
 	public void dbLeave() {
 		try {
 			conn = DBConn.dbConnection();
-//			stmt = conn.createStatement();
 			
 			String inputid = tfId.getText().toString();
 			
@@ -424,19 +386,17 @@ public class Main extends JFrame {
 			pstmt.setString(1, inputid);
 			pstmt.executeUpdate();
 			
-//			stmt.executeUpdate("update emp set leavedate = current_date() where empid = " + inputid + ";");
 			System.out.println("ID: " + inputid + " - 퇴사처리 완료\n");
 			
 			// 퇴사처리 완료 후 JTextField 초기화
 			tfClear();
 			
-//			stmt.close(); 
 			pstmt.close();
 			conn.close();
 			dbSelect();
 		} catch(Exception e) {
-			// e.printStackTrace();
 			System.err.println("- 퇴사처리 에러 발생 -");
+			e.printStackTrace();
 		}
 	}
 		
@@ -444,7 +404,6 @@ public class Main extends JFrame {
 	public void dbDelete() {
 		try {
 			conn = DBConn.dbConnection();
-//			stmt = conn.createStatement();
 			
 			// JTextField로부터 삭제를 희망하는 ID를 가져와 String타입 변수에 대입
 			String inputid = tfId.getText().toString();
@@ -455,19 +414,17 @@ public class Main extends JFrame {
 			pstmt.setString(1, inputid);
 			pstmt.executeUpdate();
 			
-//			stmt.executeUpdate("delete from emp where empid = " + inputid);
 			System.out.println("ID: " + inputid + " - 삭제 완료\n");
 			
 			// 데이터 삭제 완료 후 JTextField 초기화
 			tfClear();
 			
-//			stmt.close(); 
 			pstmt.close();
 			conn.close();
 			dbSelect();
 		} catch (Exception e) {
-			e.printStackTrace();
 			System.err.println("- 삭제 에러 발생 -");
+			e.printStackTrace();
 		}
 	}
 	
@@ -479,17 +436,13 @@ public class Main extends JFrame {
 			model.setRowCount(0);
 			
 			conn = DBConn.dbConnection();
-//			stmt = conn.createStatement();
-			
-			// ResultSet를 통해 데이터 읽어옴
-//			rs = stmt.executeQuery("select * from emp;");
 			
 			// empid를 세자릿수로 표사하기 위해 LPAD()이용
 			String selectSQL = "select LPAD(empid, 3, '0') as empid, name, age, address, dept, salary, joindate, leavedate from emp;";
 			pstmt = conn.prepareStatement(selectSQL);
-			rs = pstmt.executeQuery();
 			
-//			rs = stmt.executeQuery("select LPAD(empid, 3, '0') as empid, name, age, address, dept, salary, joindate, leavedate from emp;");
+			// ResultSet를 통해 데이터 읽어옴
+			rs = pstmt.executeQuery();
 			
 			// next()를 이용해 마지막 행 까지 데이터 출력
 			while(rs.next()) {
@@ -508,13 +461,13 @@ public class Main extends JFrame {
 			}
 			
 			System.out.println("전체 조회 완료");
-//			stmt.close();
+			
 			rs.close();
 			pstmt.close();
 			conn.close();
 		} catch (Exception e) {
-			e.printStackTrace();
 			System.err.println("- 전체 조회 에러 발생 -");
+			e.printStackTrace();
 		}
 	}
 	
@@ -525,14 +478,13 @@ public class Main extends JFrame {
 			model.setRowCount(0);
 			
 			conn = DBConn.dbConnection();
-//			stmt = conn.createStatement();
 			
 			// JTextField에서 검색 키워드를 가져옴
 			var searchText = tfSearch.getText().toString();
 			String searchSQL = null;
 			
 			// 어느 JRadioButton이 선택 되어있는지에 따라 다르게 조회
-			// empid를 세자릿수로 표사하기 위해 LPAD()이용
+			// SQL)) empid를 세자릿수로 표사하기 위해 LPAD()이용
 			if(rbId.isSelected()) {
 				searchSQL = "select LPAD(empid, 3, '0') as empid, name, age, address, dept, salary, joindate, leavedate from emp where empid like '" + "%" + searchText + "%" + "';";
 			} else if(rbName.isSelected()) {
@@ -541,10 +493,9 @@ public class Main extends JFrame {
 				searchSQL = "select LPAD(empid, 3, '0') as empid, name, age, address, dept, salary, joindate, leavedate from emp where dept like '" + "%" + searchText + "%" + "';";
 			}
 			
-			// ResultSet를 통해 데이터 읽어옴
 			pstmt = conn.prepareStatement(searchSQL);
+			// ResultSet를 통해 데이터 읽어옴
 			rs = pstmt.executeQuery();
-//			rs = stmt.executeQuery(searchSQL);
 			
 			// next()를 이용해 마지막 행 까지 데이터 출력
 			while(rs.next()) {
@@ -563,13 +514,12 @@ public class Main extends JFrame {
 			}
 			
 			System.out.println("조건 조회 완료");
-//			stmt.close();
 			rs.close();
 			pstmt.close();
 			conn.close();
 		} catch (Exception e) {
-			e.printStackTrace();
 			System.err.println("- 조건 조회 에러 발생 -");
+			e.printStackTrace();
 		}
 	}
 	
