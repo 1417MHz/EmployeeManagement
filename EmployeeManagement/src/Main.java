@@ -7,7 +7,7 @@ import javax.swing.table.*;
 
 // 사원 관리 프로그램
 public class Main extends JFrame {
-	private JButton btnInsert, btnDelete, btnUpdate, btnLeave, btnSelect, btnSearch, btnClear;
+	private JButton btnInsert, btnUpdate, btnDelete, btnLeave, btnClear, btnExit,btnSearch;
 	private JTextField tfId, tfName, tfAge, tfAddress, tfDept, tfPosition, tfSalary, tfJoindate, tfSearch;
 	private JRadioButton rbId, rbName, rbDept;
 	Connection conn;
@@ -100,8 +100,8 @@ public class Main extends JFrame {
 		btnUpdate.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent e) { dbUpdate(); }});
 		btnLeave.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent e)  { dbLeave(); }});
 		btnDelete.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent e) { dbDelete(); }});
-		btnSelect.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent e) { dbSelect(); }});
 		btnClear.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent e)  { tfClear(); }});
+		btnExit.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent e) { System.exit(0); }});
 		btnSearch.addActionListener(new ActionListener() {public void actionPerformed(ActionEvent e) { dbSearch(); }}); 
 		
 		// 초기 실행시 모든 데이터 조회
@@ -176,18 +176,18 @@ public class Main extends JFrame {
 		// 기능 수행을 위한 버튼이 모인 JPanel
 		JPanel plBtn = new JPanel();
 		plBtn.setLayout(new GridLayout(2, 3, 5, 5));
-		btnInsert = new JButton("입력");
-		btnUpdate = new JButton("수정");
-		btnDelete = new JButton("삭제");
-		btnLeave = new JButton("퇴사");
-		btnSelect = new JButton("조회");
-		btnClear = new JButton("지우기");
+		btnInsert = new JButton("입력"); btnInsert.setBackground(new Color(255, 255, 255));
+		btnUpdate = new JButton("수정"); btnUpdate.setBackground(new Color(255, 255, 255));
+		btnDelete = new JButton("삭제"); btnDelete.setBackground(new Color(255, 255, 255));
+		btnLeave = new JButton("퇴사"); btnLeave.setBackground(new Color(255, 255, 255));
+		btnClear = new JButton("초기화"); btnClear.setBackground(new Color(255, 255, 255));
+		btnExit = new JButton("종료"); btnExit.setBackground(new Color(220, 220, 220));
 		plBtn.add(btnInsert);
 		plBtn.add(btnUpdate);
 		plBtn.add(btnDelete);
 		plBtn.add(btnLeave);
-		plBtn.add(btnSelect);
 		plBtn.add(btnClear);
+		plBtn.add(btnExit);
 		
 		// 상위 패널 plMiddle에 추가
 		plMiddle.add(plBtn, BorderLayout.NORTH);
@@ -207,6 +207,7 @@ public class Main extends JFrame {
 		rbName = new JRadioButton("이름");
 		rbDept = new JRadioButton("부서");
 		btnSearch = new JButton("검색");
+		btnSearch.setBackground(new Color(255, 255, 255));
 		ButtonGroup group = new ButtonGroup();
 		group.add(rbId); group.add(rbName); group.add(rbDept);
 		
@@ -336,15 +337,7 @@ public class Main extends JFrame {
 				joindate = rs.getString("joindate");
 			}
 			
-			// 사용자가 JTextField에 입력한 정보가 있는지 체크 후 입력한 정보가 있다면 기존 데이터에 덮어쓰기 후 update 실행
-			// JTable 이벤트 처리를 통해 덮어쓰기 방식으로 데이터를 수정하므로 이 방식은 효율적이지 못함
-//			if(in_name.length() > 0) name = in_name; 
-//			if(in_age.length() > 0) age = in_age;
-//			if(in_address.length() > 0) address = in_address;
-//			if(in_dept.length() > 0) dept = in_dept;
-//			if(in_salary.length() > 0) salary = in_salary;
-//			if(in_joindate.length() > 0) joindate = in_joindate;
-			
+			// 사용자가 JTextField에 새로운 데이터를 입력했는지 확인
 			// 불필요한 덮어쓰기를 줄이기 위해 개선된 조건식
 			if(!in_name.equals(name) && in_name.length() != 0) name = in_name;
 			if(!in_age.equals(age) && in_age.length() != 0) age = in_age;
@@ -366,7 +359,7 @@ public class Main extends JFrame {
 			pstmt.setString(8, in_id);
 			pstmt.executeUpdate();
 			
-			System.out.println("ID: " + in_id + " - 수정 완료\n");
+			System.out.println("ID: " + in_id + " 이름: " + name + " - 수정 완료\n");
 			
 			// 데이터 수정 완료 후 JTextField 초기화
 			tfClear();
@@ -462,8 +455,6 @@ public class Main extends JFrame {
 				model.addRow(data);
 			}
 			
-			System.out.println("전체 조회 완료");
-			
 			rs.close(); pstmt.close(); conn.close();
 		} catch (Exception e) {
 			System.err.println("- 전체 조회 에러 발생 -");
@@ -514,8 +505,6 @@ public class Main extends JFrame {
 				model.addRow(data);
 			}
 			
-			System.out.println("조건 조회 완료");
-			
 			rs.close(); pstmt.close(); conn.close();
 		} catch (Exception e) {
 			System.err.println("- 조건 조회 에러 발생 -");
@@ -523,7 +512,7 @@ public class Main extends JFrame {
 		}
 	}
 	
-	// 입력 필드 초기화 메소드
+	// 데이터 입력, 검색 JTextField 초기화 메소드
 	public void tfClear() {
 		tfId.setText("");
 		tfName.setText("");
