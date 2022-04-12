@@ -17,7 +17,7 @@ CREATE TABLE emp (
 );
 
 -- empid, name, age, address, dept, position, salary, joindate, leavedate
--- INSERT INTO emp VALUES(?, '?', ?, '?', '?', '?, '????-??-??', NULL);
+-- INSERT INTO emp VALUES(?, '?', ?, '?', '?', '?', ?,'????-??-??', NULL);
 
 SELECT * FROM emp;
 

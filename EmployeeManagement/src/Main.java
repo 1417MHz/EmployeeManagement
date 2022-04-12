@@ -7,11 +7,11 @@ import javax.swing.table.*;
 
 // 사원 관리 프로그램
 public class Main extends JFrame {
-	private JButton btnInsert, btnUpdate, btnDelete, btnLeave, btnClear, btnExit,btnSearch;
-	private JTextField tfId, tfName, tfAge, tfAddress, tfDept, tfPosition, tfSalary, tfJoindate, tfSearch;
-	private JRadioButton rbId, rbName, rbDept;
-	Connection conn;
-	PreparedStatement pstmt; /* Statement 대신 PreparedStatement를 사용하여 성능을 개선함 */
+	public JButton btnInsert, btnUpdate, btnDelete, btnLeave, btnClear, btnExit,btnSearch;
+	public JTextField tfId, tfName, tfAge, tfAddress, tfDept, tfPosition, tfSalary, tfJoindate, tfSearch;
+	public JRadioButton rbId, rbName, rbDept;
+//	Connection conn;
+//	PreparedStatement pstmt; /* Statement 대신 PreparedStatement를 사용하여 성능을 개선함 */
 	ResultSet rs;
 	
 	// 결과 출력 화면용 JTable
@@ -45,38 +45,7 @@ public class Main extends JFrame {
 			public void mouseClicked(MouseEvent e) {
 				// 셀 더블클릭시 선택한 행에 들어있는 속성을 JTextField에 표시함
 				
-				// DB를 사용한 값 가져오기
-//				if (e.getClickCount() == 2) {
-//					var selectedRow = empTable.getValueAt(empTable.getSelectedRow(), 0);
-//					try {
-//						conn = DBConn.dbConnection();
-//						// stmt = conn.createStatement();
-//						String selectSQL = "select * from emp where empid = ?";
-//						pstmt = conn.prepareStatement(selectSQL);
-//						pstmt.setString(1, selectedRow);
-//						rs = pstmt.executeQuery();
-//						
-//						while(rs.next()) {
-//							tfId.setText(rs.getString("empid"));
-//							tfName.setText(rs.getString("name"));
-//							tfAge.setText(rs.getString("age"));
-//							tfAddress.setText(rs.getString("address"));
-//							tfDept.setText(rs.getString("dept"));
-//							tfSalary.setText(rs.getString("salary"));
-//							tfJoindate.setText(rs.getString("joindate"));
-//						}
-//						// stmt.close();
-//						conn.close(); 
-//						pstmt.close();
-//						
-//					} catch(Exception ex) {
-//						ex.printStackTrace();
-//						System.err.println("- 테이블 이벤트 처리 오류 -");
-//					}
-//				}
-				
 				// JTable에 있는 값으로 가져오기
-				// (JDBC 사용을 최소화 하기 위해 사용)
 				if (e.getClickCount() == 2) {
 					int selectedRow = empTable.getSelectedRow();
 					Object rowValue[] = new Object[8];
@@ -261,251 +230,149 @@ public class Main extends JFrame {
 		c.add(pRight, BorderLayout.CENTER);
 	}
 	
-	// 삽입 SQL 메소드
+	// 삽입 메소드(set)
 	public void dbInsert() {
-		try {
-			conn = DBConn.dbConnection();
-			
-			// 데이터를 입력받는 JTextField로부터 입력을 희망하는 데이터를 가져와 변수에 대입
-			String id = tfId.getText().toString();
-			String name = tfName.getText().toString();
-			String age = tfAge.getText().toString();
-			String address = tfAddress.getText().toString();
-			String dept = tfDept.getText().toString();
-			String position = tfPosition.getText().toString();
-			String salary = tfSalary.getText().toString();
-			String joindate = tfJoindate.getText().toString();
-			
-			// 데이터 삽입 SQL문 실행
-			String insertSQL = "insert into emp values(?, ?, ?, ?, ?, ?, ?, ?, NULL);";
-			pstmt = conn.prepareStatement(insertSQL);
-			// SQL)) id, age, salary는 int 자료형이지만 varchar 자료형과 같은 따옴표 '' 방식으로 입력될 수 있음
-			pstmt.setString(1, id);
-			pstmt.setString(2, name);
-			pstmt.setString(3, age);
-			pstmt.setString(4, address);
-			pstmt.setString(5, dept);
-			pstmt.setString(6, position);
-			pstmt.setString(7, salary);
-			pstmt.setString(8, joindate);
-			pstmt.executeUpdate();
-			
-			System.out.println("ID: " + id + " 이름: " + name + " - 입력 완료\n");
-			
-			// 데이터 삽입 완료 후 JTextField 초기화
-			tfClear();
-			
-			pstmt.close(); conn.close();
-		} catch (Exception e) {
-			System.err.println("- 입력 에러 발생 -");
-			e.printStackTrace();
-		}
+		// 데이터를 입력받는 JTextField로부터 입력을 희망하는 데이터를 가져와 변수에 대입
+		String id = tfId.getText().toString();
+		String name = tfName.getText().toString();
+		String age = tfAge.getText().toString();
+		String address = tfAddress.getText().toString();
+		String dept = tfDept.getText().toString();
+		String position = tfPosition.getText().toString();
+		String salary = tfSalary.getText().toString();
+		String joindate = tfJoindate.getText().toString();
+		
+		//
+		DBQuery.insertQ(id, name, age, address, dept, position, salary, joindate);
+		
+		System.out.println("ID: " + id + " 이름: " + name + " - 입력 완료\n");
+		
+		// 데이터 삽입 완료 후 JTextField 초기화
+		tfClear();
+		
+//		pstmt.close(); conn.close();
 	}
 	
-	// 수정 SQL 메소드
+	// 수정 메소드(set)
 	public void dbUpdate() {
-		try {
-			conn = DBConn.dbConnection();
+		// TextField에 입력된 정보 저장
+		String in_id = tfId.getText().toString();
+		String in_name = tfName.getText().toString();
+		String in_age = tfAge.getText().toString();
+		String in_address = tfAddress.getText().toString();
+		String in_dept = tfDept.getText().toString();
+		String in_position = tfPosition.getText().toString();
+		String in_salary = tfSalary.getText().toString();
+		String in_joindate = tfJoindate.getText().toString();
 			
-			// DB에서 가져올 데이터 속성을 저장할 변수
-			var name = ""; var age = ""; var address = ""; var dept = ""; 
-			var position = ""; var salary  = ""; var joindate = "";
+		//
+		DBQuery.updateQ(in_id, in_name, in_age, in_address, in_dept, in_position, in_salary, in_joindate);
 			
-			// TextField에 입력된 정보 저장
-			var in_id = tfId.getText().toString();
-			var in_name = tfName.getText().toString();
-			var in_age = tfAge.getText().toString();
-			var in_address = tfAddress.getText().toString();
-			var in_dept = tfDept.getText().toString();
-			var in_position = tfPosition.getText().toString();
-			var in_salary = tfSalary.getText().toString();
-			var in_joindate = tfJoindate.getText().toString();
+		System.out.println("ID: " + in_id + " 이름: " + in_name + " - 수정 완료\n");
 			
-			String selectSQL = "select * from emp where empid = ?";
-			pstmt = conn.prepareStatement(selectSQL);
-			pstmt.setString(1, in_id);
-			// ResultSet를 통해 데이터 읽어옴
-			rs = pstmt.executeQuery();
-			
-			while(rs.next()) {
-				name = rs.getString("name");
-				age = rs.getString("age");
-				address = rs.getString("address");
-				dept = rs.getString("dept");
-				position = rs.getString("position");
-				salary  = rs.getString("salary");
-				joindate = rs.getString("joindate");
-			}
-			
-			// 사용자가 JTextField에 새로운 데이터를 입력했는지 확인
-			// 불필요한 덮어쓰기를 줄이기 위해 개선된 조건식
-			if(!in_name.equals(name) && in_name.length() != 0) name = in_name;
-			if(!in_age.equals(age) && in_age.length() != 0) age = in_age;
-			if(!in_address.equals(address) && in_address.length() != 0) address = in_address;
-			if(!in_dept.equals(dept) && in_dept.length() != 0) dept = in_dept;
-			if(!in_position.equals(position) && in_position.length() != 0) position = in_position;
-			if(!in_salary.equals(salary) && in_salary.length() != 0) salary = in_salary;
-			if(!in_joindate.equals(joindate) && in_joindate.length() != 0) joindate = in_joindate;
-			
-			String updateSQL = "update emp set name = ?, age = ?, address = ?, dept = ?, position = ?, salary = ?, joindate = ? where empid = ?;";
-			pstmt = conn.prepareStatement(updateSQL);
-			pstmt.setString(1, name);
-			pstmt.setString(2, age);
-			pstmt.setString(3, address);
-			pstmt.setString(4, dept);
-			pstmt.setString(5, position);
-			pstmt.setString(6, salary);
-			pstmt.setString(7, joindate);
-			pstmt.setString(8, in_id);
-			pstmt.executeUpdate();
-			
-			System.out.println("ID: " + in_id + " 이름: " + name + " - 수정 완료\n");
-			
-			// 데이터 수정 완료 후 JTextField 초기화
-			tfClear();
-			
-			rs.close(); pstmt.close(); conn.close();
-		} catch (Exception e) {
-			System.err.println("- 수정 에러 발생 -");
-			e.printStackTrace();
-		}
+		// 데이터 수정 완료 후 JTextField 초기화
+		tfClear();
 	}
 	
-	// 퇴사 SQL 메소드
+	// 퇴사 메소드(set)
 	public void dbLeave() {
-		try {
-			conn = DBConn.dbConnection();
+		// 퇴사처리 할 사원의 ID 받아옴
+		String inputid = tfId.getText().toString();
+		
+		//
+		DBQuery.leaveQ(inputid);
 			
-			String inputid = tfId.getText().toString();
+		System.out.println("ID: " + inputid + " - 퇴사처리 완료\n");
 			
-			// 현재 날짜로 퇴사 처리 (YYYY-MM-DD)
-			String updateSQL = "UPDATE emp SET leavedate = CURRENT_DATE() WHERE empid = ?";
-			pstmt = conn.prepareStatement(updateSQL);
-			pstmt.setString(1, inputid);
-			pstmt.executeUpdate();
-			
-			System.out.println("ID: " + inputid + " - 퇴사처리 완료\n");
-			
-			// 퇴사처리 완료 후 JTextField 초기화
-			tfClear();
-			
-			pstmt.close(); conn.close();
-		} catch(Exception e) {
-			System.err.println("- 퇴사처리 에러 발생 -");
-			e.printStackTrace();
-		}
+		// 퇴사처리 완료 후 JTextField 초기화
+		tfClear();
 	}
 		
-	// 삭제 SQL 메소드
+	// 삭제 메소드(set)
 	public void dbDelete() {
-		try {
-			conn = DBConn.dbConnection();
+		// JTextField로부터 삭제를 희망하는 ID를 가져와 String타입 변수에 대입
+		String inputid = tfId.getText().toString();
 			
-			// JTextField로부터 삭제를 희망하는 ID를 가져와 String타입 변수에 대입
-			String inputid = tfId.getText().toString();
+		DBQuery.deleteQ(inputid);
 			
-			// 데이터 삭제 SQL문 실행
-			String deleteSQL = "delete from emp where empid = ?";
-			pstmt = conn.prepareStatement(deleteSQL);
-			pstmt.setString(1, inputid);
-			pstmt.executeUpdate();
+		System.out.println("ID: " + inputid + " - 삭제 완료\n");
 			
-			System.out.println("ID: " + inputid + " - 삭제 완료\n");
-			
-			// 데이터 삭제 완료 후 JTextField 초기화
-			tfClear();
-			
-			pstmt.close(); conn.close();
-		} catch (Exception e) {
-			System.err.println("- 삭제 에러 발생 -");
-			e.printStackTrace();
-		}
+		// 데이터 삭제 완료 후 JTextField 초기화
+		tfClear();
 	}
 	
 
-	// 전체 조회 SQL 메소드
+	// 전체 조회 메소드(get)
 	public void dbSelect() {
 		try {
 			// JTable 클리어
 			model.setRowCount(0);
 			
-			conn = DBConn.dbConnection();
-			
-			// empid를 세자릿수로 표사하기 위해 LPAD()이용
-			String selectSQL = "select LPAD(empid, 3, '0') as empid, name, age, address, dept, position, salary, joindate, leavedate from emp;";
-			pstmt = conn.prepareStatement(selectSQL);
-			
-			// ResultSet를 통해 데이터 읽어옴
-			rs = pstmt.executeQuery();
+			// select 쿼리를 작동시켜 ResultSet에 데이터를 리턴 받아옴
+			rs = DBQuery.selectQ();
 			
 			// next()를 이용해 마지막 행 까지 데이터 출력
 			while(rs.next()) {
-				var id = rs.getString("empid");
-				var name = rs.getString("name");
-				var age = rs.getString("age");
-				var address = rs.getString("address");
-				var dept = rs.getString("dept");
-				var position = rs.getString("position");
-				var salary  = rs.getString("salary");
-				var joindate = rs.getString("joindate");
-				var leavedate = rs.getString("leavedate");
+				String id = rs.getString("empid");
+				String name = rs.getString("name");
+				String age = rs.getString("age");
+				String address = rs.getString("address");
+				String dept = rs.getString("dept");
+				String position = rs.getString("position");
+				String salary  = rs.getString("salary");
+				String joindate = rs.getString("joindate");
+				String leavedate = rs.getString("leavedate");
 				
 				Object data[] = {id, name, age, address, dept, position, salary, joindate, leavedate};
 				// 한 행 씩 테이블에 데이터 삽입
 				model.addRow(data);
 			}
 			
-			rs.close(); pstmt.close(); conn.close();
 		} catch (Exception e) {
 			System.err.println("- 전체 조회 에러 발생 -");
 			e.printStackTrace();
 		}
 	}
 	
-	// 조건 조회 SQL 메소드
+	// 조건 조회 메소드(get)
 	public void dbSearch() {
 		try {
 			// JTable 클리어
 			model.setRowCount(0);
 			
-			conn = DBConn.dbConnection();
-			
 			// JTextField에서 검색 키워드를 가져옴
-			var searchText = tfSearch.getText().toString();
-			String searchSQL = null;
+			String searchText = tfSearch.getText().toString();
+			String selectedOption = null;
 			
 			// 어느 JRadioButton이 선택 되어있는지에 따라 다르게 조회
-			// SQL)) empid를 세자릿수로 표사하기 위해 LPAD()이용
 			if(rbId.isSelected()) {
-				searchSQL = "select LPAD(empid, 3, '0') as empid, name, age, address, dept, position, salary, joindate, leavedate from emp where empid like '" + "%" + searchText + "%" + "';";
+				selectedOption = "Id";
 			} else if(rbName.isSelected()) {
-				searchSQL = "select LPAD(empid, 3, '0') as empid, name, age, address, dept, position, salary, joindate, leavedate from emp where name like '" + "%" + searchText + "%" + "';";
+				selectedOption = "Name";
 			} else if(rbDept.isSelected()) {
-				searchSQL = "select LPAD(empid, 3, '0') as empid, name, age, address, dept, position, salary, joindate, leavedate from emp where dept like '" + "%" + searchText + "%" + "';";
+				selectedOption = "Dept";
 			}
 			
-			pstmt = conn.prepareStatement(searchSQL);
-			// ResultSet를 통해 데이터 읽어옴
-			rs = pstmt.executeQuery();
+			rs = DBQuery.searchQ(searchText, selectedOption);
 			
 			// next()를 이용해 마지막 행 까지 데이터 출력
 			while(rs.next()) {
-				var id = rs.getString("empid");
-				var name = rs.getString("name");
-				var age = rs.getString("age");
-				var address = rs.getString("address");
-				var dept = rs.getString("dept");
-				var position = rs.getString("position");
-				var salary  = rs.getString("salary");
-				var joindate = rs.getString("joindate");
-				var leavedate = rs.getString("leavedate");
+				String id = rs.getString("empid");
+				String name = rs.getString("name");
+				String age = rs.getString("age");
+				String address = rs.getString("address");
+				String dept = rs.getString("dept");
+				String position = rs.getString("position");
+				String salary  = rs.getString("salary");
+				String joindate = rs.getString("joindate");
+				String leavedate = rs.getString("leavedate");
 							
 				Object data[] = {id, name, age, address, dept, position, salary, joindate, leavedate};
 				// 한 행 씩 테이블에 데이터 삽입
 				model.addRow(data);
 			}
 			
-			rs.close(); pstmt.close(); conn.close();
+//			rs.close(); pstmt.close(); conn.close();
 		} catch (Exception e) {
 			System.err.println("- 조건 조회 에러 발생 -");
 			e.printStackTrace();
