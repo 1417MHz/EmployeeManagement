@@ -112,7 +112,7 @@ public class DBQuery {
 	}
 	
 	// 전체 조회 SQL 메소드
-	public static ResultSet selectQ() {
+	public static void selectQ() {
 		try {
 			// empid를 세자릿수로 표시하기 위해 LPAD()이용
 			String selectSQL = "select LPAD(empid, 3, '0') as empid, name, age, address, dept, position, salary, joindate, leavedate from emp;";
@@ -120,39 +120,72 @@ public class DBQuery {
 			
 			// ResultSet를 통해 데이터 읽어옴
 			rs = pstmt.executeQuery();
+
+			// next()를 이용해 마지막 행 까지 데이터 탐색
+			while(rs.next()) {
+				String id = rs.getString("empid");
+				String name = rs.getString("name");
+				String age = rs.getString("age");
+				String address = rs.getString("address");
+				String dept = rs.getString("dept");
+				String position = rs.getString("position");
+				String salary  = rs.getString("salary");
+				String joindate = rs.getString("joindate");
+				String leavedate = rs.getString("leavedate");
+
+				Object[] data = {id, name, age, address, dept, position, salary, joindate, leavedate};
+
+				// 한 행 씩 테이블에 데이터 삽입
+				CreateGUI.model.addRow(data);
+			}
 		} 
 		catch(Exception e) {
-			System.err.println("- 조회 에러 발생 -");
+			System.err.println("- 전체 조회 에러 발생 -");
 			e.printStackTrace();
 		}
-		// 데이터가 담긴 ResultSet 리턴
-		return rs;
 	}
 	
 	// 조건 조회 SQL 메소드
-	public static ResultSet searchQ(String searchText, String selectedOption) {
+	public static void searchQ(String searchText, String selectedOption) {
 		try {
-			String searchSQL = null;
 			// 어느 JRadioButton이 선택 되어있는지에 따라 다르게 조회
 			// SQL)) empid를 세자릿수로 표사하기 위해 LPAD()이용
-			if(selectedOption == "Id") {
-				searchSQL = "select LPAD(empid, 3, '0') as empid, name, age, address, dept, position, salary, joindate, leavedate from emp where empid like '" + "%" + searchText + "%" + "';";
-			} else if(selectedOption == "Name") {
-				searchSQL = "select LPAD(empid, 3, '0') as empid, name, age, address, dept, position, salary, joindate, leavedate from emp where name like '" + "%" + searchText + "%" + "';";
-			} else if(selectedOption == "Dept") {
-				searchSQL = "select LPAD(empid, 3, '0') as empid, name, age, address, dept, position, salary, joindate, leavedate from emp where dept like '" + "%" + searchText + "%" + "';";
-			}
+			String searchSQL = switch (selectedOption) {
+				case "Id" ->
+						"select LPAD(empid, 3, '0') as empid, name, age, address, dept, position, salary, joindate, leavedate from emp where empid like '" + "%" + searchText + "%" + "';";
+				case "Name" ->
+						"select LPAD(empid, 3, '0') as empid, name, age, address, dept, position, salary, joindate, leavedate from emp where name like '" + "%" + searchText + "%" + "';";
+				case "Dept" ->
+						"select LPAD(empid, 3, '0') as empid, name, age, address, dept, position, salary, joindate, leavedate from emp where dept like '" + "%" + searchText + "%" + "';";
+				default -> null;
+			};
 			pstmt = conn.prepareStatement(searchSQL);
 			
 			// ResultSet를 통해 데이터 읽어옴
 			rs = pstmt.executeQuery();
+
+			// next()를 이용해 마지막 행 까지 데이터 탐색
+			while(rs.next()) {
+				String id = rs.getString("empid");
+				String name = rs.getString("name");
+				String age = rs.getString("age");
+				String address = rs.getString("address");
+				String dept = rs.getString("dept");
+				String position = rs.getString("position");
+				String salary  = rs.getString("salary");
+				String joindate = rs.getString("joindate");
+				String leavedate = rs.getString("leavedate");
+
+				Object[] data = {id, name, age, address, dept, position, salary, joindate, leavedate};
+				// 한 행 씩 테이블에 데이터 삽입
+				CreateGUI.model.addRow(data);
+			}
 		}
 		catch(Exception e) {
 			System.err.println("- 조건 조회 에러 발생 -");
+			// TODO: 조건 에러를 의미하는 예외 추가
+			// throw new SearchConditionException();
 			e.printStackTrace();
 		}
-		
-		// 데이터가 담긴 ResultSet 리턴
-		return rs;
 	}
 }
